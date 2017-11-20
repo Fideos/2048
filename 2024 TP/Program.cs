@@ -9,7 +9,7 @@ namespace _2024_TP
 {
     class Program
     {
-        static void guardarPuntaje(string nombreArchivo, long puntaje)
+        static void guardarPuntaje(string nombreArchivo, long puntaje) //Implementar Guardar Partida.
         {
             nombreArchivo += ".txt";
             string texto = "";
@@ -83,20 +83,52 @@ namespace _2024_TP
             return linea;
         }
 
-        static void Teclas(ref int[,] matriz, ref bool salio)
+        static int[,] RotarArray(int[,] matriz)
         {
+            int[] matrizRotada = new int[matriz.Length];
+            int r = 0;
+            for (int i = 0; i < matriz.GetLength(0); i++)
+            {
+                for (int j = 0; j < matriz.GetLength(1); j++)
+                {
+                    matrizRotada[r] = matriz[i, j];
+                    r++;
+                }
+            }
+
+            r = 0;
+
+            Array.Reverse(matrizRotada);
+
+            for (int i = 0; i < matriz.GetLength(0); i++)
+            {
+                for (int j = 0; j < matriz.GetLength(1); j++)
+                {
+                    matriz[i, j] = matrizRotada[r];
+                    r++;
+                }
+            }
+
+            return matriz;
+        }
+
+        static void Teclas(ref int[,] matriz, ref bool salio, ref long ronda)
+        {
+            Console.WriteLine("Ronda: " + ronda);
             ConsoleKeyInfo tecla;
             tecla = Console.ReadKey(true);
             switch (tecla.Key) // Se repite el mismo codigo cambiado para cada tecla direccional.
             {
                 case ConsoleKey.UpArrow:
                     int max = 0; // Este entero limita el area de movimiento para evitar que los valores se sobrescriban
-                    bool junta; // Bool que determina si 2 valores iguales se juntaron o no
+                    bool junta, /* Bool que determina si 2 valores iguales se juntaron o no */
+                    movio = false; // Determina si las fichas se movieron, en caso de no haberlo hecho no genera fichas nuevas ni suma movimientos.
                     for (int i = 0; i < matriz.GetLength(0); i++)
                     {
                         for (int j = 0; j < matriz.GetLength(1); j++)
                         {
                             max = 0;
+                            movio = false;
                             junta = false;
                             if (matriz[i, j] > 0 && i != 0)
                             {
@@ -108,6 +140,7 @@ namespace _2024_TP
                                 if (max > 0 && matriz[max -1, j] == matriz[i, j])
                                 {
                                     matriz[max -1, j] += matriz[i, j];
+                                    matriz[max, j] = 0;
                                     junta = true;
                                 }
                                 if (max != i || junta)
@@ -118,8 +151,46 @@ namespace _2024_TP
                         }
                     }
                     GenerarFichas(matriz, ref salio);
+                    ronda++;
                     break;
                 case ConsoleKey.DownArrow:
+                    //
+
+                    RotarArray(matriz);
+                    //
+                    for (int i = 0; i < matriz.GetLength(0); i++)
+                    {
+                        for (int j = 0; j < matriz.GetLength(1); j++)
+                        {
+                            max = 0;
+                            movio = false;
+                            junta = false;
+                            if (matriz[i, j] > 0 && i != 0)
+                            {
+                                while (matriz[max, j] != 0 && max < matriz.GetLength(0) - 1 && max < i)
+                                {
+                                    max++;
+                                }
+                                matriz[max, j] = matriz[i, j];
+                                if (max > 0 && matriz[max - 1, j] == matriz[i, j])
+                                {
+                                    matriz[max - 1, j] += matriz[i, j];
+                                    matriz[max, j] = 0;
+                                    junta = true;
+                                }
+                                if (max != i || junta)
+                                {
+                                    matriz[i, j] = 0;
+                                }
+                            }
+                        }
+                    }
+                    GenerarFichas(matriz, ref salio);
+                    //
+                    RotarArray(matriz);
+
+                    ronda++;
+                    //
                     break;
                 case ConsoleKey.LeftArrow:
                     for (int i = 0; i < matriz.GetLength(0); i++)
@@ -127,6 +198,7 @@ namespace _2024_TP
                         for (int j = 0; j < matriz.GetLength(1); j++)
                         {
                             max = 0;
+                            movio = false;
                             junta = false;
                             if (matriz[i, j] > 0 && j != 0)
                             {
@@ -138,6 +210,7 @@ namespace _2024_TP
                                 if (max > 0 && matriz[i, max -1] == matriz[i, j])
                                 {
                                     matriz[i, max - 1] += matriz[i, j];
+                                    matriz[i, max] = 0;
                                     junta = true;
                                 }
                                 if (max != j || junta)
@@ -148,8 +221,46 @@ namespace _2024_TP
                         }
                     }
                     GenerarFichas(matriz, ref salio);
+                    ronda++;
                     break;
                 case ConsoleKey.RightArrow:
+                    //
+                    RotarArray(matriz);
+                    //
+
+                    for (int i = 0; i < matriz.GetLength(0); i++)
+                    {
+                        for (int j = 0; j < matriz.GetLength(1); j++)
+                        {
+                            max = 0;
+                            movio = false;
+                            junta = false;
+                            if (matriz[i, j] > 0 && j != 0)
+                            {
+                                while (matriz[i, max] != 0 && max < matriz.GetLength(1) - 1 && max < j)
+                                {
+                                    max++;
+                                }
+                                matriz[i, max] = matriz[i, j];
+                                if (max > 0 && matriz[i, max - 1] == matriz[i, j])
+                                {
+                                    matriz[i, max - 1] += matriz[i, j];
+                                    matriz[i, max] = 0;
+                                    junta = true;
+                                }
+                                if (max != j || junta)
+                                {
+                                    matriz[i, j] = 0;
+                                }
+                            }
+                        }
+                    }
+                    GenerarFichas(matriz, ref salio);
+
+                    //
+                    RotarArray(matriz);
+                    ronda++;
+                    //
                     break;
                 case ConsoleKey.Escape:
                     salio = true;
@@ -189,7 +300,7 @@ namespace _2024_TP
         }
 
 
-        static int[,] GenerarFichas(int[,] matriz, ref bool gameOver) // Terminar Game over
+        static int[,] GenerarFichas(int[,] matriz, ref bool gameOver)
         {
             Random aleatorio = new Random();
             int ficha = 0, total = matriz.Length, posicionX, posicionY, probabilidad = aleatorio.Next(1, 101);
@@ -197,7 +308,7 @@ namespace _2024_TP
             {
                 posicionX = aleatorio.Next(0, matriz.GetLength(0));
                 posicionY = aleatorio.Next(0, matriz.GetLength(1));
-            } while (matriz[posicionX, posicionY] != 0);
+            } while (matriz[posicionX, posicionY] != 0);  // Falta implementar GameOver.
             if (probabilidad <= 30)
             {
                 ficha = 4;
@@ -230,7 +341,7 @@ namespace _2024_TP
 
         static void partida(int[,] matriz, ref long puntaje, ref bool gameover)
         {
-            int ronda = 0;
+            long ronda = 0;
             while (gameover == false)
             {
                 if (ronda == 0)
@@ -239,9 +350,8 @@ namespace _2024_TP
                     matriz = GenerarFichas(matriz, ref gameover);
                 }
                 ImprimirTablero(matriz, puntaje);
-                Teclas(ref matriz, ref gameover);
-                ronda++; // Contador de movimientos (Tambien está para generar 2 valores en la primera ronda)
-                puntaje++; // Simula el puntaje (No es el puntaje real)
+                Teclas(ref matriz, ref gameover, ref ronda);
+                puntaje++; // Simula el puntaje (Implementar variable "Movio" en teclas para incrementar puntaje por movimiento.)
             }
         }
 
