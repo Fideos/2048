@@ -9,7 +9,76 @@ namespace _2024_TP
 {
     class Program
     {
-        static void guardarPuntaje(string nombreArchivo, long puntaje) //Implementar Guardar Partida.
+        static int[,] cargarPartida(string nombreArchivo) // (Incompleto) Falta implementar separador para insertar cada en la nueva matriz.
+        {
+            nombreArchivo += ".txt";
+            string valores= "";
+            if (File.Exists(nombreArchivo))
+            {
+                FileStream file = new FileStream(nombreArchivo, FileMode.Open, FileAccess.Read);
+                StreamReader sr = new StreamReader(file);
+                int i = 0;
+                while (!sr.EndOfStream)
+                {
+                    valores = sr.ReadLine();
+                    i++;
+                }
+                int tamaño = valores.Length;
+                int[,] tablero;
+                if (tamaño == 36)
+                {
+                    tablero = new int[6, 6];
+                }
+                else if (tamaño == 64)
+                {
+                    tablero = new int[6, 6];
+                }
+                else
+                {
+                    tablero = new int[4, 4];
+                }
+                int j = 0;
+                for(int x = 0; x < tablero.GetLength(0); x++)
+                {
+                    for(int y = 0; y < tablero.GetLength(1); y++)
+                    {
+                        tablero[x, y] = Convert.ToInt32(valores[j]);
+                        j++;
+                    }
+                }
+                sr.Close();
+                file.Close();
+                return tablero;
+            }
+            else
+            {
+                int[,] tablero = new int[4, 4];
+                return tablero;
+            }
+        }
+        static void guardarPartida(string nombreArchivo, int[,] matriz)
+        {
+            nombreArchivo += ".txt";
+            FileStream file = new FileStream(nombreArchivo, FileMode.Create, FileAccess.Write);
+            StreamWriter sw = new StreamWriter(file);
+            string valores = "";
+            for (int i = 0; i < matriz.GetLength(0); i++)
+            {
+                for(int j = 0; j < matriz.GetLength(1); j++)
+                {
+                    valores += Convert.ToString(matriz[i, j]);
+                    valores += ";";
+                }
+            }
+            for (int i = 0; i < valores.Length; i++)
+            {
+                sw.Write(valores[i]);
+            }
+            sw.Close();
+            file.Close();
+        }
+
+        static void guardarPuntaje(string nombreArchivo, long puntaje)
         {
             nombreArchivo += ".txt";
             string texto = "";
@@ -83,7 +152,7 @@ namespace _2024_TP
             return linea;
         }
 
-        static int[,] RotarArray(int[,] matriz)
+        static int[,] RotarArray(int[,] matriz) // Inserta el Array multidimensional en uno simple para poder usar reverse.
         {
             int[] matrizRotada = new int[matriz.Length];
             int r = 0;
@@ -112,7 +181,7 @@ namespace _2024_TP
             return matriz;
         }
 
-        static void Teclas(ref int[,] matriz, ref bool salio, ref long ronda)
+        static void Teclas(ref int[,] matriz, ref bool salio, ref long ronda, ref long puntaje) // El codigo de esta función se puede reformular para no repetir codigo.
         {
             Console.WriteLine("Ronda: " + ronda);
             ConsoleKeyInfo tecla;
@@ -122,7 +191,7 @@ namespace _2024_TP
                 case ConsoleKey.UpArrow:
                     int max = 0; // Este entero limita el area de movimiento para evitar que los valores se sobrescriban
                     bool junta, /* Bool que determina si 2 valores iguales se juntaron o no */
-                    movio = false; // Determina si las fichas se movieron, en caso de no haberlo hecho no genera fichas nuevas ni suma movimientos.
+                    movio = false; // (Incompleto) Determina si las fichas se movieron, en caso de no haberlo hecho no genera fichas nuevas ni suma movimientos. (Falta implementar)
                     for (int i = 0; i < matriz.GetLength(0); i++)
                     {
                         for (int j = 0; j < matriz.GetLength(1); j++)
@@ -142,6 +211,7 @@ namespace _2024_TP
                                     matriz[max -1, j] += matriz[i, j];
                                     matriz[max, j] = 0;
                                     junta = true;
+                                    puntaje = puntaje + 10;
                                 }
                                 if (max != i || junta)
                                 {
@@ -177,6 +247,7 @@ namespace _2024_TP
                                     matriz[max - 1, j] += matriz[i, j];
                                     matriz[max, j] = 0;
                                     junta = true;
+                                    puntaje = puntaje + 10;
                                 }
                                 if (max != i || junta)
                                 {
@@ -212,6 +283,7 @@ namespace _2024_TP
                                     matriz[i, max - 1] += matriz[i, j];
                                     matriz[i, max] = 0;
                                     junta = true;
+                                    puntaje = puntaje + 10;
                                 }
                                 if (max != j || junta)
                                 {
@@ -247,6 +319,7 @@ namespace _2024_TP
                                     matriz[i, max - 1] += matriz[i, j];
                                     matriz[i, max] = 0;
                                     junta = true;
+                                    puntaje = puntaje + 10;
                                 }
                                 if (max != j || junta)
                                 {
@@ -350,8 +423,7 @@ namespace _2024_TP
                     matriz = GenerarFichas(matriz, ref gameover);
                 }
                 ImprimirTablero(matriz, puntaje);
-                Teclas(ref matriz, ref gameover, ref ronda);
-                puntaje++; // Simula el puntaje (Implementar variable "Movio" en teclas para incrementar puntaje por movimiento.)
+                Teclas(ref matriz, ref gameover /*Implementar*/, ref ronda, ref puntaje);
             }
         }
 
@@ -360,7 +432,7 @@ namespace _2024_TP
             int tamaño = 0;
             long puntaje = 0;
             string menu, modoDeJuego;
-            bool gameover = false;
+            bool salio = false, cargar = false;
             do
             {
                 Console.WriteLine("1) Nuevo juego.\n2) Cargar juego. //Clausurado\n3) Mejor jugador.\n4) Salir.");
@@ -369,20 +441,23 @@ namespace _2024_TP
                 {
                     case "1":
                         break;
+                        /*
                     case "2":
+                        cargar = true;
                         break;
+                        */
                     case "3":
                         Console.Clear();
                         Console.WriteLine("Mejor Jugador:\nName|Score\n\n" + Ranking("mejorJugador") + "\n\n\n\nPresione cualquier tecla para volver al menu...");
                         Console.ReadKey();
                         break;
                     case "4":
-                        gameover = true;
+                        salio = true;
                         break;
                 }
                 Console.Clear();
-            } while (menu != "1" && menu != "4");
-            if (gameover == false)
+            } while (menu != "1" /*&& menu != "2" */&& menu != "4");
+            if (!salio && !cargar)
             {
                 do
                 {
@@ -403,11 +478,33 @@ namespace _2024_TP
                         break;
                 }
             }
-            int[,] tablero = new int [tamaño , tamaño];
-            partida(tablero, ref puntaje, ref gameover);
+
+            int[,] tablero;
+
+            if (cargar)
+            {
+                tablero = cargarPartida("partida");
+            }
+            else
+            {
+                tablero = new int[tamaño, tamaño];
+            }
+
+            bool gameover = false;
+
+            if (!salio)
+            {
+                partida(tablero, ref puntaje, ref gameover);
+            }
+
             Console.Clear();
-            Console.WriteLine("Su puntaje fue " + puntaje + "\n");
-            guardarPuntaje("mejorJugador", puntaje);
+
+            if (gameover)
+            {
+                Console.WriteLine("Su puntaje fue " + puntaje + "\n");
+                guardarPuntaje("mejorJugador", puntaje);
+                guardarPartida("partida", tablero);
+            }
             Console.WriteLine("\n\nPresione cualquier tecla para salir...");
             Console.ReadKey();
         }
